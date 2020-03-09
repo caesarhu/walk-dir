@@ -1,0 +1,24 @@
+{:duct.profile/base
+ {:duct.core/project-ns walk-dir
+
+  :walk-logger #ig/ref :duct.logger/timbre
+
+  :duct.logger/timbre
+  {:level     :debug
+   :appenders {:duct.logger.timbre/rolling #ig/ref :duct.logger.timbre/rolling
+               :duct.logger.timbre/brief #ig/ref :duct.logger.timbre/brief}
+   :timestamp-opts #ig/ref :walk-dir.timestamp-opts}
+
+  :duct.logger.timbre/rolling {:path "logs/walk-dir.log"
+                               :pattern :daily}
+  :duct.logger.timbre/brief {:min-level :report}
+
+  :walk-dir.timestamp-opts {:pattern "yyyy-MM-dd HH:mm:ss"
+                            :locale "zh_TW"
+                            :timezone "Asia/Taipei"}}
+
+ :duct.profile/dev   #duct/include "dev"
+ :duct.profile/local #duct/include "local"
+ :duct.profile/prod  {}
+
+ :duct.module/logging {}}
