@@ -59,7 +59,8 @@
 
 (defn do-srt-file
   [srt-file]
-  (s2twp srt-file))
+  (when (to-utf8 srt-file)
+    (s2twp srt-file)))
 
 (defn filter-srt-files
   [files]
