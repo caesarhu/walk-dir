@@ -8,6 +8,7 @@
     [walk-dir.files :as files]))
 
 ;; ffmpeg 函數，諸如字幕檔轉碼成utf-8及ass to srt，都用此函數
+;; 以ffmpeg轉檔，可以避免enca轉碼提前中斷未轉換完全的錯誤
 (defn ffmpeg-process
   [file tmp-file]
   (let [pre-result (sh "ffmpeg" "-y" "-i" file tmp-file)
