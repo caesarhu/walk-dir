@@ -13,9 +13,10 @@
             [datoteka.core :as fs]
             [walk-dir.system :refer [walk-logger]]
             [walk-dir.walk :refer [walk]]
-            [walk-dir.files-fn :as files]
+            [walk-dir.files :as files]
             [clojure.java.shell :refer [sh]]
-            [walk-dir.srt :as srt]))
+            [walk-dir.srt :as srt]
+            [walk-dir.ass :as ass]))
 
 (duct/load-hierarchy)
 
