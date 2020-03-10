@@ -13,11 +13,11 @@
          (let [raw-dir (vec (filter some? (fs/list-dir directory)))
                files (filter fs/regular-file? raw-dir)
                dirs (filter fs/directory? raw-dir)]
-           (when files-fn
-             (files-fn files))
            (if dirs-fn
              (doall (map dirs-fn dirs))
-             (doall (map #(walk % files-fn) dirs)))))
+             (doall (map #(walk % files-fn) dirs)))
+           (when files-fn
+             (files-fn files))))
        (catch Exception ex
          (log @walk-logger :error ::peocessing-directory-fail {:directory directory
                                                                :message (.getMessage ex)})))

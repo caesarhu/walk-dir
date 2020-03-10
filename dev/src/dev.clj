@@ -15,8 +15,7 @@
             [walk-dir.walk :refer [walk]]
             [walk-dir.files :as files]
             [clojure.java.shell :refer [sh]]
-            [walk-dir.srt :as srt]
-            [walk-dir.ass :as ass]))
+            [walk-dir.subtitle :as sub]))
 
 (duct/load-hierarchy)
 
