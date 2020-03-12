@@ -10,6 +10,7 @@
             [integrant.core :as ig]
             [integrant.repl :refer [clear halt go init prep reset]]
             [integrant.repl.state :refer [config system]]
+            [clojure.string :as str]
             [datoteka.core :as fs]
             [walk-dir.system :refer [walk-logger]]
             [walk-dir.walk :refer [walk]]

@@ -7,6 +7,10 @@
     [clojure.java.shell :refer [sh]]
     [walk-dir.files :as files]))
 
+(defn change-ext
+  [file ext]
+  (str (first (fs/split-ext file)) ext))
+
 ;; ffmpeg 函數，諸如字幕檔轉碼成utf-8及ass to srt，都用此函數
 ;; 以ffmpeg轉檔，可以避免enca轉碼提前中斷未轉換完全的錯誤
 (defn ffmpeg-process
@@ -16,7 +20,7 @@
                  pre-result
                  (sh "ffmpeg" "-y" "-sub_charenc" "gb18030" "-i" file tmp-file))]
     (if (= 0 (:exit result))
-      (let [srt-file (str (first (fs/split-ext file)) ".srt")]
+      (let [srt-file (change-ext file ".srt")]
         (fs/move tmp-file srt-file #{:replace})
         (log @walk-logger :info ::ffmpeg-process-success {:file srt-file})
         srt-file)
@@ -39,7 +43,8 @@
                   tmp-file
                   (fs/create-tempfile))]
      (try
-       (sh-fn (to-str file) (to-str t-file))
+       (when (fs/exists? file)
+         (sh-fn (to-str file) (to-str t-file)))
        (catch Exception ex
          (log @walk-logger :error ::sh-file-fn-error {:file file
                                                       :error-message (.getMessage ex)}))
@@ -53,7 +58,7 @@
 
 (defn s2tw
   [file tmp-file]
-  (let [result (sh "opencc" "-i" (str file) "-o" (str tmp-file) "-c" "s2twp.json")]
+  (let [result (sh "opencc" "-i" file "-o" tmp-file "-c" "s2twp.json")]
     (if (= (:err result) "")
       (do
         (fs/move tmp-file file #{:replace})
@@ -69,10 +74,22 @@
   (when-let [result (sh-file srt-file ffmpeg-process (fs/create-tempfile :suffix ".srt"))]
     (sh-file result s2tw (fs/create-tempfile :suffix ".srt"))))
 
+(def re-tag #"<[^>]*>")
+
+(defn remove-tag-str
+  [tag-str]
+  (str/replace tag-str re-tag ""))
+
+(defn remove-tag-file
+  [file]
+  (when (fs/exists? file)
+    (spit file (remove-tag-str (slurp file)))))
+
 (defn do-srt-files
   [files]
   (files/do-files-fn files do-subtitle-file (partial files/filter-ext "srt")))
 
 (defn do-ass-files
   [files]
-  (files/do-files-fn files do-subtitle-file (partial files/filter-ext "ass")))
+  (files/do-files-fn files do-subtitle-file (partial files/filter-ext "ass"))
+  (files/do-files-fn (map #(change-ext % ".srt") files) remove-tag-file (partial files/filter-ext "srt")))
