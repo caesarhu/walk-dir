@@ -5,7 +5,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [duct/core "0.8.0"]
                  [duct/module.logging "0.5.0"]
-                 [funcool/datoteka "1.2.0"]]
+                 [funcool/datoteka "1.2.0"]
+                 [clojure.java-time "0.3.2"]]
   :plugins [[duct/lein-duct "0.12.1"]]
   :main ^:skip-aot walk-dir.main
   :resource-paths ["resources" "target/resources"]

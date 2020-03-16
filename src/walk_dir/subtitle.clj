@@ -5,7 +5,8 @@
     [duct.logger :refer [log]]
     [walk-dir.system :refer [walk-logger]]
     [clojure.java.shell :refer [sh]]
-    [walk-dir.files :as files]))
+    [walk-dir.files :as files]
+    [java-time :as jt]))
 
 (defn change-ext
   [file ext]
@@ -85,6 +86,21 @@
   (when (fs/exists? file)
     (spit file (remove-tag-str (slurp file)))))
 
+(def re-style-pre #"\{.*\}")
+(def re-style #"^\s*m\s.*$")
+
+(defn remove-style-str
+  [in-str]
+  (let [style-lines (str/split-lines in-str)
+        remove-pre-lines (map #(str/replace % re-style-pre "") style-lines)
+        removed-lines (map #(str/replace % re-style "") remove-pre-lines)]
+    (str/join "\n" removed-lines)))
+
+(defn remove-style-file
+  [file]
+  (when (fs/exists? file)
+    (spit file (remove-style-str (slurp file)))))
+
 (defn do-srt-files
   [files]
   (files/do-files-fn files do-subtitle-file (partial files/filter-ext "srt")))
@@ -92,4 +108,42 @@
 (defn do-ass-files
   [files]
   (files/do-files-fn files do-subtitle-file (partial files/filter-ext "ass"))
-  (files/do-files-fn (map #(change-ext % ".srt") files) remove-tag-file (partial files/filter-ext "srt")))
+  (files/do-files-fn (map #(change-ext % ".srt") files) remove-tag-file (partial files/filter-ext "srt"))
+  (files/do-files-fn (map #(change-ext % ".srt") files) remove-style-file (partial files/filter-ext "srt")))
+
+(def re-srt-time #"\d\d:\d\d:\d\d,\d\d\d")
+(def re-adjust-time #"([+|-])(\d\d:\d\d:\d\d.\d\d\d)")
+(def srt-time-format "HH:mm:ss,SSS")
+(def base-time (jt/local-time "00:00:00"))
+
+(defn parse-srt-time
+  [srt-time]
+  (jt/local-time srt-time-format srt-time))
+
+(defn to-srt-time
+  [t]
+  (jt/format srt-time-format t))
+
+(defn duration
+  [adjust-str]
+  (when-let [[_ direction time] (re-matches re-adjust-time adjust-str)]
+    (let [dt (jt/duration base-time (jt/local-time time))]
+      (if (= "-" direction)
+        (jt/negate dt)
+        dt))))
+
+(defn adjust-srt-time-str
+  [srt-time-str duration-time]
+  (let [origin-time (parse-srt-time srt-time-str)]
+    (to-srt-time (jt/plus origin-time duration-time))))
+
+(defn adjust-srt-time
+  [file duration-str]
+  (let [duration-time (duration duration-str)
+        file-str (slurp file)
+        adjusted-str (str/replace file-str re-srt-time #(adjust-srt-time-str % duration-time))]
+    (spit file adjusted-str)))
+
+(defn adjust-time-files
+  [files duration-str]
+  (files/do-files-fn files #(adjust-srt-time % duration-str) (partial files/filter-ext "srt")))
