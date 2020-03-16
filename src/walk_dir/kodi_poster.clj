@@ -20,6 +20,9 @@
 (def re-kodi-poster #".+-poster.jpg$")
 (def re-kodi-fanart #".+-fanart.jpg$")
 (def re-plex-thumb #".*thumb.png")
+(def plex-poster-name #"poster.jpg")
+(def plex-thumb-name #"thumb.jpg")
+(def plex-fanart-name #"fanart.jpg")
 
 (defn copy-image-kodi
   [file]
@@ -55,9 +58,22 @@
             (re-matches re-plex-thumb (str file)))
     (fs/delete file)))
 
+(defn delete-plex-image
+  [file]
+  (let [file-name (fs/name file)]
+    (when (or (re-matches plex-poster-name file-name)
+              (re-matches plex-thumb-name file-name)
+              (re-matches plex-fanart-name file-name))
+      (fs/delete file))))
+
+(defn kodi-style
+  [file]
+  (delete-plex-image file)
+  (copy-image-kodi file))
+
 (defn to-kodi
   [files]
-  (doall (map copy-image-kodi files)))
+  (doall (map kodi-style files)))
 
 (defn plex-style
   [file]
