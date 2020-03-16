@@ -18,7 +18,8 @@
             [clojure.java.shell :refer [sh]]
             [walk-dir.subtitle :as sub]
             [java-time :as jt]
-            [java-time.repl :as jr]))
+            [java-time.repl :as jr]
+            [walk-dir.kodi-poster :as kodi]))
 
 (duct/load-hierarchy)
 
