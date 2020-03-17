@@ -14,4 +14,4 @@ pom.xml.asc
 /dev/src/local.clj
 /.idea
 *.iml
-
+.rebel_readline_history
