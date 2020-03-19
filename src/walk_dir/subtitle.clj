@@ -17,9 +17,10 @@
   (let [result (sh "enca" file)
         out (:out result)
         encode (str/upper-case (last (re-find #";\s+(.+)\n" out)))]
-    (when (or (= encode "GB2312")
-              (= encode "BIG5"))
-      encode)))
+    (case encode
+      "GB2312" "GB18030"
+      "BIG5" "BIG5"
+      nil)))
 
 ;; ffmpeg 函數，諸如字幕檔轉碼成utf-8及ass to srt，都用此函數
 ;; 以ffmpeg轉檔，可以避免enca轉碼提前中斷未轉換完全的錯誤
