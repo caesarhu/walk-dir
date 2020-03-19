@@ -12,14 +12,23 @@
   [file ext]
   (str (first (fs/split-ext file)) ext))
 
+(defn detect-encode
+  [file]
+  (let [result (sh "enca" file)
+        out (:out result)
+        encode (str/upper-case (last (re-find #";\s+(.+)\n" out)))]
+    (when (or (= encode "GB2312")
+              (= encode "BIG5"))
+      encode)))
+
 ;; ffmpeg 函數，諸如字幕檔轉碼成utf-8及ass to srt，都用此函數
 ;; 以ffmpeg轉檔，可以避免enca轉碼提前中斷未轉換完全的錯誤
 (defn ffmpeg-process
   [file tmp-file]
-  (let [pre-result (sh "ffmpeg" "-y" "-i" file tmp-file)
-        result (if (= 0 (:exit pre-result))
-                 pre-result
-                 (sh "ffmpeg" "-y" "-sub_charenc" "gb18030" "-i" file tmp-file))]
+  (let [encode (detect-encode file)
+        result (if encode
+                 (sh "ffmpeg" "-y" "-sub_charenc" encode "-i" file tmp-file)
+                 (sh "ffmpeg" "-y" "-i" file tmp-file))]
     (if (= 0 (:exit result))
       (let [srt-file (change-ext file ".srt")]
         (fs/move tmp-file srt-file #{:replace})
