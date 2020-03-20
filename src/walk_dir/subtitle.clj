@@ -14,12 +14,10 @@
 
 (defn detect-encode
   [file]
-  (let [result (sh "enca" file)
-        out (:out result)
-        encode (str/upper-case (last (re-find #";\s+(.+)\n" out)))]
-    (case encode
-      "GB2312" "GB18030"
-      "BIG5" "BIG5"
+  (let [encodeing (str/trim (:out (sh "uchardet" file)))] ;; 使用uchardet偵測編碼最準確
+    (if (or (re-find #"GB" encodeing)
+            (re-find #"BIG5" encodeing))
+      encodeing
       nil)))
 
 ;; ffmpeg 函數，諸如字幕檔轉碼成utf-8及ass to srt，都用此函數
